@@ -1,0 +1,24 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 2rem;
+    background: #f9f9f9;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  #emails {
+    margin-top: 2rem;
+  }
+  ul {
+    list-style: none;
+    padding: 0;
+  }
+  li {
+    padding: 10px;
+    background: #fff;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+  
