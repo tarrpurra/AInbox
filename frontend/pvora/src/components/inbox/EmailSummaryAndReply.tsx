@@ -1,8 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { usePollinationsText } from "@pollinations/react";
 
 const EmailSummaryAndReply = ({ email }) => {
   const navigate = useNavigate();
@@ -11,9 +12,22 @@ const EmailSummaryAndReply = ({ email }) => {
   const truncatedBody =
     email.body?.length > 250 ? email.body.slice(0, 250) + "..." : email.body;
 
+  // 🧠 Call Pollinations API correctly (like HaikuComponent)
+  const priorityText = usePollinationsText(
+    `Rate the urgency of the following email on a scale of 0 (low priority) to 100 (high priority). Respond with only the number:\n\n"${email.body}"`,
+    {
+      seed: 42,
+      model: "mistral",
+      systemPrompt: "You are a helpful assistant that gives only numeric priority scores.",
+    }
+  );
+
+  const parsedScore = parseInt(priorityText, 10);
+  const priorityScore = isNaN(parsedScore) ? 0 : Math.min(parsedScore, 100);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Back Navigation */}
+    <div className="max-w-4xl mx-auto space-y-6 px-4 pb-10">
+      {/* Back Button */}
       <div className="flex items-center gap-2 mb-2">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -24,16 +38,13 @@ const EmailSummaryAndReply = ({ email }) => {
       {/* Email Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            {email.subject}
-          </CardTitle>
+          <CardTitle className="text-lg font-semibold">{email.subject}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-sm text-gray-600">
             <strong>From:</strong> {email.from}
           </p>
-
-          <div className="text-sm bg-gray-50 border border-gray-200 p-4 rounded-md relative">
+          <div className="text-sm bg-gray-50 border border-gray-200 p-4 rounded-md relative break-words whitespace-pre-wrap">
             {showFullBody ? email.body : truncatedBody || "No body available."}
 
             {email.body?.length > 250 && (
@@ -60,7 +71,7 @@ const EmailSummaryAndReply = ({ email }) => {
         </CardContent>
       </Card>
 
-      {/* AI Summary */}
+      {/* AI Summary Card */}
       <Card>
         <CardHeader>
           <CardTitle className="text-md font-medium">📌 AI Summary</CardTitle>
@@ -84,22 +95,33 @@ const EmailSummaryAndReply = ({ email }) => {
         </CardContent>
       </Card>
 
-      {/* Sentiment Analysis Bar */}
+      {/* Priority Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-md font-medium">📊 Sentiment Analysis</CardTitle>
+          <CardTitle className="text-md font-medium flex items-center gap-2">
+            📊 Priority Analysis
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-yellow-400"
-              style={{ width: "70%" /* You can adjust dynamically */ }}
+              className={`h-full transition-all duration-500 ease-in-out ${
+                priorityScore < 40
+                  ? "bg-green-400"
+                  : priorityScore < 70
+                  ? "bg-yellow-400"
+                  : "bg-red-400"
+              }`}
+              style={{ width: `${priorityScore}%` }}
             ></div>
           </div>
           <div className="flex justify-between text-xs text-gray-600 mt-1">
-            <span>Low Priority</span>
-            <span>High Priority</span>
+            <span>Low Priority (0)</span>
+            <span>High Priority (100)</span>
           </div>
+          <p className="text-right text-xs text-gray-500 mt-1">
+            Score: {priorityText ? `${priorityScore}%` : "Analyzing..."}
+          </p>
         </CardContent>
       </Card>
     </div>
